@@ -1,39 +1,40 @@
-import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React from 'react';
+import { Link } from 'react-router-dom';
 
 const Navbar = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    const user = localStorage.getItem("user");
-    if (user) {
-      setIsLoggedIn(true);
-    }
-  }, []);
-
-  const handleLogout = () => {
-    localStorage.removeItem("user");
-    localStorage.removeItem("role");
-    setIsLoggedIn(false);
-    navigate("/login");
-  };
+  // Check if the token exists in localStorage to determine if the user is logged in
+  const token = localStorage.getItem('token');
 
   return (
-    <nav className="bg-gray-800 p-4 text-white flex justify-between items-center">
-      <h1 className="text-xl font-bold">My App</h1>
-      <div>
-        {isLoggedIn ? (
-          <>
-            <Link to="/projects" className="px-4 py-2 bg-blue-500 rounded mr-2">Projects</Link>
-            <button onClick={handleLogout} className="px-4 py-2 bg-red-500 rounded">Logout</button>
-          </>
-        ) : (
-          <>
-            <Link to="/login" className="px-4 py-2 bg-green-500 rounded mr-2">Sign In</Link>
-            <Link to="/register" className="px-4 py-2 bg-blue-500 rounded">Sign Up</Link>
-          </>
-        )}
+    <nav className="navbar navbar-expand-lg navbar-light bg-light">
+      <div className="container-fluid">
+        <Link className="navbar-brand" to="/">MyApp</Link>
+        <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+          <span className="navbar-toggler-icon"></span>
+        </button>
+        <div className="collapse navbar-collapse" id="navbarNav">
+          <ul className="navbar-nav ms-auto">
+            {/* Display these links only if the user is logged in */}
+            {token ? (
+              <>
+                <li className="nav-item">
+                  <Link className="nav-link" to="/dashboard">Dashboard</Link>
+                </li>
+                <li className="nav-item">
+                  <Link className="nav-link" to="/projects">Projects</Link>
+                </li>
+                <li className="nav-item">
+                  <Link className="nav-link" to="/logout">Logout</Link>
+                </li>
+              </>
+            ) : (
+              // If not logged in, show login/signup options
+              <li className="nav-item">
+                <Link className="nav-link" to="/login">Login</Link>
+              </li>
+            )}
+          </ul>
+        </div>
       </div>
     </nav>
   );

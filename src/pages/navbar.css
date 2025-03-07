@@ -1,0 +1,85 @@
+/* navbar.css */
+
+/* Navbar Styling */
+.navbar {
+    background-color: #343a40;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    padding: 0.8rem 2rem;
+  }
+  
+  .navbar-brand {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: white;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  
+  .navbar-nav .nav-link {
+    color: white !important;
+    font-size: 1.1rem;
+    padding: 0.8rem 1.2rem;
+    text-transform: capitalize;
+    font-weight: 500;
+    transition: background-color 0.3s ease;
+  }
+  
+  .navbar-nav .nav-link:hover {
+    background-color: #007bff;
+    color: white !important;
+  }
+  
+  /* Dropdown Menu Styling */
+  .navbar-nav .dropdown-menu {
+    background-color: #343a40;
+    border: none;
+  }
+  
+  .navbar-nav .dropdown-item {
+    color: #f8f9fa;
+    font-weight: 500;
+  }
+  
+  .navbar-nav .dropdown-item:hover {
+    background-color: #007bff;
+    color: white;
+  }
+  
+  /* Button Styling */
+  .navbar .btn {
+    font-weight: 600;
+  }
+  
+  .navbar .btn-danger {
+    background-color: #dc3545;
+    color: white;
+    border-radius: 4px;
+    padding: 0.5rem 1.2rem;
+    transition: background-color 0.3s ease;
+  }
+  
+  .navbar .btn-danger:hover {
+    background-color: #c82333;
+    color: white;
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .navbar-nav {
+      margin-top: 1rem;
+    }
+  
+    .navbar-brand {
+      font-size: 1.6rem;
+    }
+  
+    .navbar-nav .nav-link {
+      font-size: 1rem;
+      padding: 0.6rem 1rem;
+    }
+  
+    .navbar-nav .dropdown-item {
+      font-size: 1rem;
+    }
+  }
+  
