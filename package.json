@@ -1,16 +1,23 @@
 {
   "name": "backproj",
   "version": "1.0.0",
+<<<<<<< HEAD
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js"
+=======
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+>>>>>>> 5ae02eee6ca3c4f81c44f0707d79d41368577ddf
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
+<<<<<<< HEAD
     "axios": "^1.8.2",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
@@ -22,5 +29,19 @@
     "passport": "^0.7.0",
     "passport-github2": "^0.1.12",
     "passport-google-oauth20": "^2.0.0"
+=======
+    "bcryptjs": "^3.0.2",
+    "body-parser": "^1.20.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "jwt-decode": "^4.0.0",
+    "mongoose": "^8.12.1",
+    "node-localstorage": "^3.0.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+>>>>>>> 5ae02eee6ca3c4f81c44f0707d79d41368577ddf
   }
 }
