@@ -4,8 +4,15 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const http = require("http");
+const { Server } = require("socket.io");
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: { origin: "*" }
+});
+
 app.use(express.json());
 app.use(cors());
 
@@ -29,9 +36,10 @@ const ProjectSchema = new mongoose.Schema({
   title: { type: String, required: true },
   description: { type: String, required: true },
   category: { type: String, required: true },
-  status: { type: String, enum: ["Active", "Completed"], default: "Active" },
+  status: { type: String, enum: ["Active", "Completed", "On Hold"], default: "Active" },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-  completionDate: { type: Date }  // This will store the completion date when the project is marked as completed
+  completionDate: { type: Date },
+  createdAt: { type: Date, default: Date.now } // Automatically set creation date
 });
 
 const Project = mongoose.model("Project", ProjectSchema);
@@ -46,7 +54,7 @@ const authMiddleware = (req, res, next) => {
 
   try {
     const verified = jwt.verify(bearerToken, process.env.JWT_SECRET);
-    req.user = verified;  // attach the user data to the request
+    req.user = verified;
     next();
   } catch (err) {
     console.error("Auth Error:", err);
@@ -54,19 +62,23 @@ const authMiddleware = (req, res, next) => {
   }
 };
 
+// WebSocket Connection
+io.on("connection", (socket) => {
+  console.log("🔗 A client connected");
+
+  socket.on("disconnect", () => {
+    console.log("❌ A client disconnected");
+  });
+});
+
 // User Signup
 app.post("/api/register", async (req, res) => {
   try {
     const { username, email, password, role } = req.body;
-
-    if (!username || !email || !password) {
-      return res.status(400).json({ success: false, message: "All fields are required" });
-    }
+    if (!username || !email || !password) return res.status(400).json({ success: false, message: "All fields are required" });
 
     const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ success: false, message: "Email already registered" });
-    }
+    if (existingUser) return res.status(400).json({ success: false, message: "Email already registered" });
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = new User({ username, email, password: hashedPassword, role });
@@ -83,10 +95,7 @@ app.post("/api/register", async (req, res) => {
 app.post("/api/signin", async (req, res) => {
   try {
     const { email, password } = req.body;
-
-    if (!email || !password) {
-      return res.status(400).json({ error: "Email and password are required" });
-    }
+    if (!email || !password) return res.status(400).json({ error: "Email and password are required" });
 
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ error: "User not found" });
@@ -106,20 +115,18 @@ app.post("/api/signin", async (req, res) => {
 app.post("/api/projects", authMiddleware, async (req, res) => {
   try {
     const { title, description, category, status } = req.body;
-
-    if (!title || !description || !category) {
-      return res.status(400).json({ error: "Title, description, and category are required" });
-    }
+    if (!title || !description || !category) return res.status(400).json({ error: "Title, description, and category are required" });
 
     const project = new Project({
       title,
       description,
       category,
-      status: status || "Active", // Default status to "Active" if not provided
+      status: status || "Active",
       userId: req.user.userId
     });
 
     await project.save();
+    io.emit("projectUpdated"); // Notify all clients about the new project
     res.status(201).json({ message: "Project added", project });
   } catch (error) {
     console.error("Project Creation Error:", error);
@@ -130,7 +137,7 @@ app.post("/api/projects", authMiddleware, async (req, res) => {
 // Get all projects of a user
 app.get("/api/projects", authMiddleware, async (req, res) => {
   try {
-    const projects = await Project.find({ userId: req.user.userId });
+    const projects = await Project.find({ userId: req.user.userId }).sort({ createdAt: -1 });
     res.json(projects);
   } catch (err) {
     console.error("Fetch Projects Error:", err);
@@ -138,7 +145,7 @@ app.get("/api/projects", authMiddleware, async (req, res) => {
   }
 });
 
-// Mark project as completed (PUT request)
+// Mark project as completed
 app.put("/api/projects/:id/complete", authMiddleware, async (req, res) => {
   try {
     const project = await Project.findById(req.params.id);
@@ -149,24 +156,32 @@ app.put("/api/projects/:id/complete", authMiddleware, async (req, res) => {
     }
 
     project.status = "Completed";
-    project.completionDate = new Date(); // Set completion date when marking as completed
+    project.completionDate = new Date();
     await project.save();
 
+    io.emit("projectUpdated"); // Notify all clients about the update
     res.json({ message: "Project marked as completed", project });
   } catch (error) {
     console.error("Error updating project status:", error);
     res.status(500).json({ error: "Failed to update project status" });
   }
 });
-// const ProjectSchema = new mongoose.Schema({
-//   title: { type: String, required: true },
-//   description: { type: String, required: true },
-//   category: { type: String, required: true },
-//   status: { type: String, enum: ["Active", "Completed"], default: "Active" },
-//   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-//   createdAt: { type: Date, default: Date.now },  // Automatically set the creation date
-// });
+
+// Delete a project
+app.delete("/api/projects/:id", authMiddleware, async (req, res) => {
+  try {
+    const project = await Project.findById(req.params.id);
+    if (!project) return res.status(404).json({ error: "Project not found" });
+
+    await project.deleteOne();
+    io.emit("projectUpdated"); // Notify all clients about the deletion
+    res.json({ message: "Project deleted successfully" });
+  } catch (error) {
+    console.error("Project Deletion Error:", error);
+    res.status(500).json({ error: "Failed to delete project" });
+  }
+});
 
 // Start Server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+server.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
